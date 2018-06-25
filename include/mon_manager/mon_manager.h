@@ -11,7 +11,7 @@
 #include <root/component.h>
 #include <timer_session/connection.h>
 #include <util/string.h>
-#include <cap_session/connection.h>
+//#include <cap_session/connection.h>
 #include <trace_session/connection.h>
 #include <base/thread_state.h>
 
@@ -41,7 +41,9 @@ class Mon_manager
 		Genode::size_t update_info(Genode::Dataspace_capability ds_cap);
 		void update_rqs(Genode::Dataspace_capability rq_ds_cap);
 		void update_dead(Genode::Dataspace_capability dead_ds_cap);
-		Mon_manager();
+		Mon_manager(Genode::Env &_env);
+		Mon_manager(const Mon_manager&);
+		Mon_manager& operator = (const Mon_manager&);
 		Genode::Dataspace_capability init_ds_cap(int num_threads);
 		int get_num_cores();
 		Genode::Trace::Execution_time get_idle_time(int core);
