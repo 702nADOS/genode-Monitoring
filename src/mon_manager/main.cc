@@ -125,22 +125,27 @@ int main()
 
 struct Main
 {	
-	Libc::Env &_env;
-	Genode::Entrypoint &_ep;	
+	Genode::Env &_env;	
 	Mon_manager::Mon_manager monmanager {_env};
-	Genode::Sliced_heap sliced_heap{_env.ram(),
-	                               _env.rm()};	
-	Mon_manager::Root_component _mon_manager_root{_ep, sliced_heap, &monmanager};
+	Genode::Heap _heap {_env.ram(), _env.rm()};	
+	Mon_manager::Root_component _mon_manager_root{_env.ep(), _heap, &monmanager};
 	
-	Main(Libc::Env &env) : _env(env), _ep(_env.ep())
+	Main(Genode::Env &env) : _env(env)
 	{
-				_env.parent().announce(_ep.manage(_mon_manager_root));
-	}	
+		Genode::log("monmanager: Hello!");
+		_env.parent().announce(_env.ep().manage(_mon_manager_root));
+	}
 	
 };
 
-//void Component::construct(Genode::Env &env) { static Main main(env); }
-void Libc::Component::construct(Libc::Env &env)
+void Component::construct(Genode::Env &env)
 {
-	Libc::with_libc([&] () { static Main main(env); });
+	Genode::log("monmanager: Hello!");
+	static Main server(env);
+}
+
+//void Component::construct(Genode::Env &env) { static Main main(env); }
+void Libc::Component::construct(Libc::Env&)
+{
+	Libc::with_libc([&] () { });
 }
