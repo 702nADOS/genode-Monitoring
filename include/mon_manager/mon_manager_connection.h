@@ -7,7 +7,8 @@ namespace Mon_manager {
 
 	struct Connection : Genode::Connection<Session>, Session_client
 	{
-		Connection() : Genode::Connection<Mon_manager::Session>(session("mon_manager, ram_quota=4096")),
+		Connection(Genode::Env &env) : Genode::Connection<Mon_manager::Session>(env, session(env.parent(),
+		                                                "ram_quota=6K, cap_quota=4")),
 		               Session_client(cap()) { }
 	};
 

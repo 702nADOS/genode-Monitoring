@@ -12,140 +12,98 @@
 /* local includes */
 #include "mon_manager/mon_manager_session.h"
 
-namespace Mon_manager
-{
-
-	struct Session_component : Genode::Rpc_object<Session>
-	{
-
-		private:
-
-			Mon_manager *_monmanager = nullptr;
-
-		public:
-			enum { CAP_QUOTA = 2 };
-			Genode::size_t update_info(Genode::Dataspace_capability ds_cap)
-			{
-				return _monmanager->update_info(ds_cap);
-			}
-
-			void update_rqs(Genode::Dataspace_capability ds_cap)
-			{
-				_monmanager->update_rqs(ds_cap);
-			}
-
-			void update_dead(Genode::Dataspace_capability ds_cap)
-			{
-				_monmanager->update_dead(ds_cap);
-			}
-
-			int get_num_cores()
-			{
-				return _monmanager->get_num_cores();
-			}
-
-			Genode::Trace::Execution_time get_idle_time(int core)
-			{
-				return _monmanager->get_idle_time(core);
-			}
-
-			bool is_core_online(int core)
-			{
-				return _monmanager->is_core_online(core);
-			}
-
-			int get_util(int core)
-			{
-				return _monmanager->get_util(core);
-			}
-
-			Session_component(Mon_manager *monmanager)
-			: Genode::Rpc_object<Session>()
-			{
-				_monmanager = monmanager;
-			}
-			Session_component(const Session_component&);
-			Session_component& operator = (const Session_component&);
-
-	};
-
-	class Root_component : public Genode::Root_component<Session_component>
-	{
-
-		private:
-
-			//Genode::Env &_env;
-			Mon_manager *_monmanager = nullptr;
-			
-
-		protected:
-
-			Session_component *_create_session(const char *)
-			{
-				return new (md_alloc()) Session_component(_monmanager);
-			}
-
-		public:
-
-			Root_component(Genode::Entrypoint &ep,
-			               Genode::Allocator &allocator,
-			               Mon_manager *monmanager)
-			: Genode::Root_component<Session_component>(ep, allocator)
-			{
-				_monmanager = monmanager;
-			}
-			Root_component(const Root_component&);
-			Root_component& operator = (const Root_component&);
-	};
-
+namespace Mon_manager {
+	struct Main;
+	struct Session_component;
+	struct Root_component;
 }
 
-
-/*
-int main()
+struct Mon_manager::Session_component : Genode::Rpc_object<Session>
 {
-	Mon_manager::Mon_manager monmanager;
-
-	Cap_connection cap;
-
-	static Sliced_heap sliced_heap(env()->ram_session(),
-	                               env()->rm_session());
-
-	enum { STACK_SIZE = 4096 };
-	static Rpc_entrypoint ep(&cap, STACK_SIZE, "mon_manager_ep");
-
-	static Mon_manager::Root_component mon_manager_root(&ep, &sliced_heap, &monmanager);
-	env()->parent()->announce(ep.manage(&mon_manager_root)); 
-
-	sleep_forever();
-
-	return 0;
-}
-*/
-
-struct Main
-{	
-	Genode::Env &_env;	
-	Mon_manager::Mon_manager monmanager {_env};
-	Genode::Heap _heap {_env.ram(), _env.rm()};	
-	Mon_manager::Root_component _mon_manager_root{_env.ep(), _heap, &monmanager};
-	
-	Main(Genode::Env &env) : _env(env)
-	{
-		Genode::log("monmanager: Hello!");
-		_env.parent().announce(_env.ep().manage(_mon_manager_root));
-	}
-	
+	private:
+		Mon_manager* _monitor=nullptr;
+	public:
+		enum { CAP_QUOTA = 2 };
+		Genode::size_t update_info(Genode::Dataspace_capability ds_cap)
+		{
+			return _monitor->update_info(ds_cap);
+		}
+		void update_rqs(Genode::Dataspace_capability ds_cap)
+		{
+			_monitor->update_rqs(ds_cap);
+		}
+		void update_dead(Genode::Dataspace_capability ds_cap)
+		{
+			_monitor->update_dead(ds_cap);
+		}
+		int get_num_cores()
+		{
+			return _monitor->get_num_cores();
+		}
+		Genode::Trace::Execution_time get_idle_time(int core)
+		{
+			return _monitor->get_idle_time(core);
+		}
+		bool is_core_online(int core)
+		{
+			return _monitor->is_core_online(core);
+		}
+		int get_util(int core)
+		{
+			return _monitor->get_util(core);
+		}
+		
+		Session_component(Mon_manager *monitor)
+		: Genode::Rpc_object<Session>()
+		{
+			_monitor = monitor;
+		}
+	Session_component(const Session_component&);
+	Session_component& operator = (const Session_component&);	
 };
 
-void Component::construct(Genode::Env &env)
+class Mon_manager::Root_component : public Genode::Root_component<Session_component>
 {
-	Genode::log("monmanager: Hello!");
-	static Main server(env);
-}
+	private:
+		Mon_manager* _monitor { };
+	protected:
 
-//void Component::construct(Genode::Env &env) { static Main main(env); }
-void Libc::Component::construct(Libc::Env&)
+		Session_component *_create_session(const char*)
+		{
+			return new (md_alloc()) Session_component(_monitor);
+		}
+
+	public:
+
+		Root_component(Genode::Entrypoint &ep,
+		               Genode::Allocator &alloc,
+		               Mon_manager *monitor)
+		:
+			Genode::Root_component<Session_component>(ep, alloc)
+		{
+			_monitor=monitor;
+		}
+	Root_component(const Root_component&);
+	Root_component& operator = (const Root_component&);	
+};
+
+struct Mon_manager::Main
 {
-	Libc::with_libc([&] () { });
+	enum { ROOT_STACK_SIZE = 16*1024 };
+	Genode::Env	&_env;
+	Genode::Heap	heap	{ _env.ram(), _env.rm() };
+	Mon_manager monitor { _env };
+	Root_component Mon_manager_root { _env.ep(), heap , &monitor};
+
+	Main(Libc::Env &env_) : _env(env_)
+	{
+		_env.parent().announce(_env.ep().manage(Mon_manager_root));
+	}
+};
+
+Genode::size_t Component::stack_size() { return 32*1024; }
+
+void Libc::Component::construct(Libc::Env &env)
+{
+	Libc::with_libc([&] () { static Mon_manager::Main main(env); });
 }

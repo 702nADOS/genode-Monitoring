@@ -9,9 +9,8 @@
 #include <trace_session/connection.h>
 //#include <os/config.h>
 namespace Mon_manager{
-	Mon_manager::Mon_manager(Genode::Env &env):_env(env) {}
-
-	
+	Mon_manager::Mon_manager(Genode::Env &env):_env(env)
+	{ }
 
 	size_t Mon_manager::update_info(Genode::Dataspace_capability mon_ds_cap)
 	{
@@ -71,7 +70,7 @@ namespace Mon_manager{
 		num_threads=1;
 		static Genode::Trace::Connection trace(_env, 1024*4096, 64*4096, 0);
 		Genode::Trace::Subject_id subjects[num_threads];
-		//size_t num_subjects = trace.subjects(subjects, num_threads);
+		trace.subjects(subjects, num_threads);
 		Genode::Trace::SCHEDULER_info scheduler_info = trace.scheduler_info(subjects[0]);
 		num_cores=scheduler_info.num_cores();
 		return num_cores;
@@ -81,7 +80,7 @@ namespace Mon_manager{
 		num_threads=1;
 		static Genode::Trace::Connection trace(_env, 1024*4096, 64*4096, 0);
 		Genode::Trace::Subject_id subjects[num_threads];
-		//size_t num_subjects = trace.subjects(subjects, num_threads);
+		trace.subjects(subjects, num_threads);
 		Genode::Trace::SCHEDULER_info scheduler_info = trace.scheduler_info(subjects[0]);
 		idle0=scheduler_info.idle0();
 		idle1=scheduler_info.idle1();
@@ -100,7 +99,7 @@ namespace Mon_manager{
 		num_threads=1;
 		static Genode::Trace::Connection trace(_env, 1024*4096, 64*4096, 0);
 		Genode::Trace::Subject_id subjects[num_threads];
-		//size_t num_subjects = trace.subjects(subjects, num_threads);
+		trace.subjects(subjects, num_threads);
 		Genode::Trace::SCHEDULER_info scheduler_info = trace.scheduler_info(subjects[0]);
 		core0_is_online=scheduler_info.core0_is_online();
 		core1_is_online=scheduler_info.core1_is_online();
@@ -115,8 +114,8 @@ namespace Mon_manager{
 		}
 	}
 
-	int Mon_manager::get_util(int core)
+	int Mon_manager::get_util(int /*core*/)
 	{
-		return util.utilization(core);
+		return 0;//util.utilization(core);
 	}
 }

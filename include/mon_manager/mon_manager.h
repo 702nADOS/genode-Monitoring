@@ -51,7 +51,7 @@ class Mon_manager
 		int get_util(int core);
 		
 	protected:
-		Utilization::Connection util {};
+		//Utilization::Connection util {_env};
 		int num_subjects {};
 		int* rq {};
 		long long unsigned* dead{};
