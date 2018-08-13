@@ -10,7 +10,6 @@ namespace Mon_manager {
 
 	struct Session : Genode::Session
 	{
-
 		static const char *service_name() { return "mon_manager"; }
 
 		virtual Genode::size_t update_info(Genode::Dataspace_capability ds_cap) = 0;

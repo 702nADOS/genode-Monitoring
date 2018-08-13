@@ -3,14 +3,11 @@
 #include <base/printf.h>
 #include <base/rpc_server.h>
 #include <base/sleep.h>
-//#include <cap_session/connection.h>
 #include <libc/component.h>
 #include <root/component.h>
 #include <base/component.h>
-#include "mon_manager/mon_manager.h"
-
-/* local includes */
-#include "mon_manager/mon_manager_session.h"
+#include <mon_manager/mon_manager.h>
+#include <mon_manager/mon_manager_session.h>
 
 namespace Mon_manager {
 	struct Main;
